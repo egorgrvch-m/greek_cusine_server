@@ -1,5 +1,6 @@
 const uuid = require("uuid");
 const path = require("path");
+const fs = require("fs");
 const { Device } = require("../models/models.js");
 const ApiError = require("../error/ApiError.js");
 const { application } = require("express");
@@ -47,6 +48,24 @@ class DeviceController {
       where: { id },
     });
     return res.json(device);
+  }
+
+  async delete(req, res, next) {
+    try {
+      const { id } = req.params;
+      const device = await Device.findByPk(id);
+      if (!device) {
+        return next(ApiError.notFound(`Device with id ${id} not found`));
+      }
+      const imagePath = path.resolve(__dirname, "..", "static", device.img);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+      await device.destroy();
+      return res.json({ message: `Device with id ${id} deleted successfully` });
+    } catch (error) {
+      next(ApiError.internal(error.message));
+    }
   }
 }
 
