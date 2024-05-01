@@ -67,6 +67,33 @@ class DeviceController {
       next(ApiError.internal(error.message));
     }
   }
+
+  async deleteByType(req, res, next) {
+    try {
+      const { typeId } = req.params;
+      const devices = await Device.findAll({ where: { typeId } });
+      if (!devices.length) {
+        return next(
+          ApiError.notFound(`No devices found with typeId ${typeId}`)
+        );
+      }
+
+      // Удаляем изображения товаров и сами товары
+      devices.forEach(async (device) => {
+        const imagePath = path.resolve(__dirname, "..", "static", device.img);
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+        await device.destroy();
+      });
+
+      return res.json({
+        message: `All devices with typeId ${typeId} deleted successfully`,
+      });
+    } catch (error) {
+      next(ApiError.internal(error.message));
+    }
+  }
 }
 
 module.exports = new DeviceController();

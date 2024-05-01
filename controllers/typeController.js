@@ -10,6 +10,21 @@ class TypeController {
     const types = await Type.findAll();
     return res.json(types);
   }
+
+  async delete(req, res, next) {
+    try {
+      const { id } = req.params;
+      await Type.destroy({
+        where: { id },
+        cascade: true,
+      });
+      return res.json({
+        message: `Type with id ${id} and associated items deleted successfully`,
+      });
+    } catch (error) {
+      next(ApiError.internal(error.message));
+    }
+  }
 }
 
 module.exports = new TypeController();
